@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SMART CAMPUS HUB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-circle"><span></span></div>
+      <div class="logo-text">
+        <h1>SMART CAMPUS HUB</h1>
+        <span>Student management system</span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-target="studentsSection">
+        <span class="dot"></span> Students
+      </button>
+      <button class="nav-btn" data-target="eventsSection">
+        <span class="dot"></span> Events
+      </button>
+      <button class="nav-btn" data-target="attendanceSection">
+        <span class="dot"></span> Attendance
+      </button>
+      <button class="nav-btn" data-target="feesSection">
+        <span class="dot"></span> Fees
+      </button>
+      <button class="nav-btn" data-target="marksSection">
+        <span class="dot"></span> Marks
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <div class="sidebar-title">Smart overview</div>
+      <div class="quick-stats">
+        <div class="pill">
+          <div>
+            <small>Total students</small>
+            <strong id="statTotalStudents">0</strong>
+          </div>
+          <span class="badge success" id="statActiveStudents">ACTIVE</span>
+        </div>
+        <div class="pill pill-attendance">
+          <div>
+            <small>Today’s attendance</small>
+            <strong id="statAttendanceToday">0%</strong>
+          </div>
+          <span class="badge warning">LIVE</span>
+        </div>
+      </div>
+
+      <div class="side-section">
+        <h3>Quick filters</h3>
+        <div class="toggle-group">
+          <button class="toggle-chip active" data-filter="all">All</button>
+          <button class="toggle-chip" data-filter="classA">Class A</button>
+          <button class="toggle-chip" data-filter="classB">Class B</button>
+          <button class="toggle-chip" data-filter="classC">Class C</button>
+        </div>
+        <p class="side-note">
+          Use filters + search to quickly locate students for updating, deleting or checking fees and marks.
+        </p>
+      </div>
+
+      <div class="side-section">
+        <h3>Tips</h3>
+        <p class="side-note">
+          • Click “Export to Excel” in any section to download the visible table data.<br>
+          • Use “Print view” for hard-copy reports directly from the browser.
+        </p>
+      </div>
+    </aside>
+
+    <section class="content">
+      <!-- Students Section -->
+      <div id="studentsSection" class="section active">
+        <div class="section-header">
+          <div class="section-title">
+            <h2>Students</h2>
+            <span>Add, search, update or delete students.</span>
+          </div>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="text" id="studentSearch" placeholder="Search by name, ID or class..." />
+              <span>⌕</span>
+            </div>
+            <button class="btn success" id="btnAddStudent">+ Add student</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Student form</h3>
+              <small id="studentFormMode">Mode: Add new</small>
+            </div>
+            <form id="studentForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Student ID</label>
+                  <input type="text" id="studentId" required placeholder="e.g. STU001" />
+                </div>
+                <div class="form-group">
+                  <label>Full name</label>
+                  <input type="text" id="studentName" required placeholder="Student name" />
+                </div>
+                <div class="form-group">
+                  <label>Class</label>
+                  <select id="studentClass" required>
+                    <option value="">Select class</option>
+                    <option value="Class A">Class A</option>
+                    <option value="Class B">Class B</option>
+                    <option value="Class C">Class C</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Phone</label>
+                  <input type="text" id="studentPhone" placeholder="Parent contact" />
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="studentEmail" placeholder="Email (optional)" />
+                </div>
+                <div class="form-group">
+                  <label>Status</label>
+                  <select id="studentStatus">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group form-group-notes">
+                <label>Address / Notes</label>
+                <textarea id="studentNotes" placeholder="Address or extra notes"></textarea>
+              </div>
+              <div class="form-buttons">
+                <button type="submit" class="btn success" id="studentSaveBtn">Save</button>
+                <button type="button" class="btn secondary" id="studentResetBtn">Reset form</button>
+                <button type="button" class="btn danger" id="studentDeleteBtn" style="display:none;">Delete student</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <div class="card-header">
+              <h3>Student list</h3>
+              <small>Data can be exported and printed.</small>
+            </div>
+            <div class="table-toolbar">
+              <button class="btn secondary" onclick="exportTableToExcel('studentsTable','students.xlsx')">Export to Excel</button>
+              <button class="btn secondary" onclick="printTable('studentsTable')">Print view</button>
+            </div>
+            <div class="table-wrapper">
+              <table id="studentsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events Section -->
+      <div id="eventsSection" class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <h2>Events</h2>
+            <span>Create and manage campus events.</span>
+          </div>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="text" id="eventSearch" placeholder="Search by title or date..." />
+              <span>⌕</span>
+            </div>
+            <button class="btn success" id="btnAddEvent">+ Add event</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Event form</h3>
+              <small id="eventFormMode">Mode: Add new</small>
+            </div>
+            <form id="eventForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Event ID</label>
+                  <input type="text" id="eventId" required placeholder="e.g. EVT001" />
+                </div>
+                <div class="form-group">
+                  <label>Title</label>
+                  <input type="text" id="eventTitle" required placeholder="Event title" />
+                </div>
+                <div class="form-group">
+                  <label>Date</label>
+                  <input type="date" id="eventDate" required />
+                </div>
+                <div class="form-group">
+                  <label>Venue</label>
+                  <input type="text" id="eventVenue" placeholder="Hall / Ground / Online" />
+                </div>
+              </div>
+              <div class="form-group form-group-notes">
+                <label>Description</label>
+                <textarea id="eventDescription" placeholder="Event details"></textarea>
+              </div>
+              <div class="pill-row">
+                <span class="pill-tag" onclick="quickEventTag('Workshop')">Workshop</span>
+                <span class="pill-tag" onclick="quickEventTag('Seminar')">Seminar</span>
+                <span class="pill-tag" onclick="quickEventTag('Sports')">Sports</span>
+                <span class="pill-tag" onclick="quickEventTag('Cultural')">Cultural</span>
+              </div>
+              <div class="form-buttons">
+                <button type="submit" class="btn success" id="eventSaveBtn">Save</button>
+                <button type="button" class="btn secondary" id="eventResetBtn">Reset</button>
+                <button type="button" class="btn danger" id="eventDeleteBtn" style="display:none;">Delete event</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <div class="card-header">
+              <h3>Event list</h3>
+              <small>Keep track of all upcoming events.</small>
+            </div>
+            <div class="table-toolbar">
+              <button class="btn secondary" onclick="exportTableToExcel('eventsTable','events.xlsx')">Export to Excel</button>
+              <button class="btn secondary" onclick="printTable('eventsTable')">Print view</button>
+            </div>
+            <div class="table-wrapper">
+              <table id="eventsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Venue</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="eventsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Section -->
+      <div id="attendanceSection" class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <h2>Attendance</h2>
+            <span>Mark and review student attendance.</span>
+          </div>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="date" id="attendanceDate" />
+              <span>📅</span>
+            </div>
+            <button class="btn success" id="btnMarkAttendance">Mark attendance</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Mark attendance</h3>
+              <small>Select status for each student.</small>
+            </div>
+            <div class="form-group">
+              <label>Select class</label>
+              <select id="attendanceClass">
+                <option value="">All classes</option>
+                <option value="Class A">Class A</option>
+                <option value="Class B">Class B</option>
+                <option value="Class C">Class C</option>
+              </select>
+            </div>
+            <div class="table-wrapper table-wrapper-small">
+              <table id="attendanceStudentsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceStudentsTbody"></tbody>
+              </table>
+            </div>
+            <div class="form-buttons">
+              <button class="btn success" id="attendanceSaveBtn">Save attendance</button>
+              <button class="btn secondary" id="attendanceClearBtn">Clear selection</button>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="card-header">
+              <h3>Attendance log</h3>
+              <small>History view in table form.</small>
+            </div>
+            <div class="table-toolbar">
+              <button class="btn secondary" onclick="exportTableToExcel('attendanceTable','attendance.xlsx')">Export to Excel</button>
+              <button class="btn secondary" onclick="printTable('attendanceTable')">Print view</button>
+            </div>
+            <div class="table-wrapper">
+              <table id="attendanceTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fees Section -->
+      <div id="feesSection" class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <h2>Fees</h2>
+            <span>Track fee status, update and export.</span>
+          </div>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="text" id="feeSearch" placeholder="Search by student or status..." />
+              <span>⌕</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Fee details</h3>
+              <small>Update fee payments for a student.</small>
+            </div>
+            <form id="feeForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Student ID</label>
+                  <input type="text" id="feeStudentId" placeholder="Existing student ID" required />
+                </div>
+                <div class="form-group">
+                  <label>Total fee</label>
+                  <input type="number" id="feeTotal" placeholder="Total amount" />
+                </div>
+                <div class="form-group">
+                  <label>Paid amount</label>
+                  <input type="number" id="feePaid" placeholder="Paid amount" />
+                </div>
+                <div class="form-group">
+                  <label>Status</label>
+                  <select id="feeStatus">
+                    <option value="Pending">Pending</option>
+                    <option value="Partially Paid">Partially Paid</option>
+                    <option value="Paid">Paid</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group form-group-notes">
+                <label>Remarks</label>
+                <textarea id="feeRemarks" placeholder="Optional remarks"></textarea>
+              </div>
+              <div class="form-buttons">
+                <button type="submit" class="btn success">Save / Update</button>
+                <button type="button" class="btn secondary" id="feeResetBtn">Reset</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <div class="card-header">
+              <h3>Fee records</h3>
+              <small>Shows current fee status in table.</small>
+            </div>
+            <div class="table-toolbar">
+              <button class="btn secondary" onclick="exportTableToExcel('feesTable','fees.xlsx')">Export to Excel</button>
+              <button class="btn secondary" onclick="printTable('feesTable')">Print view</button>
+            </div>
+            <div class="table-wrapper">
+              <table id="feesTable">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="feesTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marks Section -->
+      <div id="marksSection" class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <h2>Marks</h2>
+            <span>Store and update exam marks.</span>
+          </div>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="text" id="marksSearch" placeholder="Search by student or subject..." />
+              <span>⌕</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Marks entry</h3>
+              <small>Add or update marks for exams.</small>
+            </div>
+            <form id="marksForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Student ID</label>
+                  <input type="text" id="marksStudentId" placeholder="Existing student ID" required />
+                </div>
+                <div class="form-group">
+                  <label>Subject</label>
+                  <input type="text" id="marksSubject" placeholder="Subject name" required />
+                </div>
+                <div class="form-group">
+                  <label>Exam</label>
+                  <input type="text" id="marksExam" placeholder="e.g. Midterm, Final" required />
+                </div>
+                <div class="form-group">
+                  <label>Marks obtained</label>
+                  <input type="number" id="marksObtained" placeholder="e.g. 78" required />
+                </div>
+                <div class="form-group">
+                  <label>Total marks</label>
+                  <input type="number" id="marksTotal" placeholder="e.g. 100" required />
+                </div>
+              </div>
+              <div class="form-buttons">
+                <button type="submit" class="btn success">Save / Update</button>
+                <button type="button" class="btn secondary" id="marksResetBtn">Reset</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <div class="card-header">
+              <h3>Marks sheet</h3>
+              <small>View and export marks in table form.</small>
+            </div>
+            <div class="table-toolbar">
+              <button class="btn secondary" onclick="exportTableToExcel('marksTable','marks.xlsx')">Export to Excel</button>
+              <button class="btn secondary" onclick="printTable('marksTable')">Print view</button>
+            </div>
+            <div class="table-wrapper">
+              <table id="marksTable">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Subject</th>
+                    <th>Exam</th>
+                    <th>Marks</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="marksTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    SMART CAMPUS HUB • Front-end prototype (HTML, CSS, JS) with Excel export, print-ready tables, and SMART AI assistant.
+  </footer>
+
+  <!-- AI Assistant Chat (SMART AI) -->
+  <div class="ai-chat-toggle" id="aiChatToggle">
+    <span>🤖</span>
+    <div class="ai-chat-toggle-text">
+      <strong>SMART AI</strong>
+      <small>Ask anything</small>
+    </div>
+  </div>
+
+  <div class="ai-chatbox" id="aiChatbox">
+    <div class="ai-chat-header">
+      <div>
+        <strong>SMART CAMPUS HUB AI</strong>
+        <span>Ask anything about this system</span>
+      </div>
+      <button id="aiChatCloseBtn">✕</button>
+    </div>
+    <div class="ai-chat-body" id="aiChatBody"></div>
+    <div class="ai-chat-footer">
+      <input
+        type="text"
+        id="aiUserInput"
+        placeholder="Ask about students, fees, attendance, events, marks..."
+      />
+      <button id="aiSendBtn">➤</button>
+    </div>
+  </div>
+
+  <!-- Your JS -->
+  <script src="script.js"></script>
+</body>
+</html>
