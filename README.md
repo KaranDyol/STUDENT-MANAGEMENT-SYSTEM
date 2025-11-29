@@ -1,1 +1,1 @@
-# STUDENT-MANAGEMENT-SYSTEM
+A student management system project needs to automate administrative tasks like student registration, tracking academic performance, and managing student data. For this project to work, you should focus on key features such as user management, student details management, and mark/result management
